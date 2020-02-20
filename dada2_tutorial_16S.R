@@ -1,3 +1,5 @@
+#only work on m_and_b and on the R version, push and then merge online
+#' shows up in MD as text, but # is just part of code chunks
 #'# dada2 tutorial with MiSeq dataset for Fierer Lab 
 #' *This tutorial created by Angela Oliverio and Hannah Holland-Moritz, and updated May 13th, 2019.*
 #+ setup, include=FALSE

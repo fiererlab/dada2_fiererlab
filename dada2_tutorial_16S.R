@@ -686,3 +686,4 @@ saveRDS(track_plot, paste0(project.fp, "/tracking_reads_summary_plot.rds"))
 #' 2. Remove reads assigned as eukaryotes
 #' 3. Remove reads that are unassigned at domain level
 #' 4. Normalize or rarefy your ASV table
+#' 

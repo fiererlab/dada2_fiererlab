@@ -1,9 +1,13 @@
+---
+output: github_document
+---
+
 # dada2 tutorial with MiSeq dataset for Fierer Lab 
 *This tutorial was created by Angela Oliverio and Hannah Holland-Moritz, and is maintained by Cliff Bueno de Mesquita and other current members of the Fierer Lab*     
 *Updated November 16th, 2024*
 
 ````{r setup, include=FALSE}
-# some setup options for outputing markdown files; feel free to ignore these
+# some setup options for outputting markdown files; feel free to ignore these
 knitr::opts_chunk$set(eval = TRUE, 
                       include = TRUE, 
                       warning = FALSE, 
@@ -21,7 +25,6 @@ This pipeline runs the dada2 workflow for Big Data (paired-end) from RStudio on 
 
 We suggest opening the dada2 tutorial online to understand more about each step. The original pipeline on which this tutorial is based can be found here: [https://benjjneb.github.io/dada2/bigdata_paired.html](https://benjjneb.github.io/dada2/bigdata_paired.html)
    
-
 | <span> |
 | :--- |
 | **NOTE:** There is a slightly different pipeline for ITS and non-"Big data" workflows. The non-"Big data" pipeline, in particular, has very nice detailed explanations for each step and can be found here: [https://benjjneb.github.io/dada2/tutorial.html](https://benjjneb.github.io/dada2/tutorial.html) |
@@ -49,7 +52,6 @@ We suggest opening the dada2 tutorial online to understand more about each step.
    
    *Note by default, only 'OPEN' issues are shown. You can look at all issues by removing "is:open" in the search bar at the top.  
    
-
 ## Set up (part 1) - Steps before starting pipeline ##
 
 If you are running it through Fierer Lab "microbe" server:
@@ -105,7 +107,6 @@ Now, install DADA2 & other necessary packages. If this is your first time on Rst
 | **WARNING:** This installation may take a long time, so only run this code if these packages are not already installed! |
 | <span> |
 
-
 ````{r package installation, eval = FALSE, include=TRUE}
 install.packages("BiocManager")
 BiocManager::install("dada2")
@@ -117,7 +118,6 @@ install.packages("Hmisc")
 install.packages("ggplot2")
 install.packages("plotly")
 ````
-
 
 Load DADA2 and required packages
 
@@ -142,7 +142,6 @@ along the way.
 
 For this tutorial we will be working with some samples that we obtained 16S amplicon data for, from a Illumina Miseq run. The data for these samples can be found on the CME website. [http://cme.colorado.edu/projects/bioinformatics-tutorials](http://cme.colorado.edu/projects/bioinformatics-tutorials)
 
-
 ````{r }
 # Set up pathway to idemp (demultiplexing tool) and test
 idemp <- "/usr/bin/idemp" # CHANGE ME if not on microbe
@@ -166,7 +165,6 @@ I1.fp <- file.path(data.fp, "Undetermined_S0_L001_I1_001.fastq.gz")
 R1.fp <- file.path(data.fp, "Undetermined_S0_L001_R1_001.fastq.gz") 
 R2.fp <- file.path(data.fp, "Undetermined_S0_L001_R2_001.fastq.gz") 
 ````
-
 | <span> |
 | :--- | 
 | **NOTE:** idemp relies on having a match in length between the index file and and the barcode sequences. Since the index file usually includes a extra linker basepair (making it 13bp long), you should append the barcode sequences with "N" to make sure each is 13bp long. If you are not sure of the length of index reads, check with the sequencing center. If your index reads are 12bp long, you do NOT need to add an "N". |
@@ -209,7 +207,6 @@ list.files(demultiplex.fp)
 | <span> |
 
 #### Clean up the output from idemp
-
 
 ````{r }
 # Change names of unassignable reads so they are not included in downstream processing
@@ -292,7 +289,6 @@ primerHits <- function(primer, fn) {
 
 Before running cutadapt, we will look at primer detection for the first couple samples, as a check. There may be some primers here, we will remove them below using cutadapt. If your first couple samples happen to be blanks, change the number to a real sample.
 
-
 ````{r }
 rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.filtN[[1]]), 
       FWD.ReverseReads = sapply(FWD.orients, primerHits, fn = fnRs.filtN[[1]]), 
@@ -303,7 +299,6 @@ rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.filtN[[2]]),
       REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs.filtN[[2]]), 
       REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs.filtN[[2]]))
 ````
-
 #### Remove primers with cutadapt and assess the output
 
 ````{r }
@@ -341,7 +336,6 @@ rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.cut[[2]]),
       REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs.cut[[2]]), 
       REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs.cut[[2]]))
 ````
-
 # Now start DADA2 pipeline
 
 ````{r }
@@ -406,8 +400,6 @@ ggplotly(fwd_qual_plots)
 ggplotly(rev_qual_plots)
 ````
 
-
-
 ````{r }
 # write plots to disk
 saveRDS(fwd_qual_plots, paste0(filter.fp, "/fwd_qual_plots.rds"))
@@ -425,7 +417,6 @@ ggsave(plot = rev_qual_plots, filename = paste0(filter.fp, "/rev_qual_plots.png"
 | :--- |
 | **WARNING:** THESE PARAMETERS ARE NOT OPTIMAL FOR ALL DATASETS. Make sure you determine the trim and filtering parameters for your data. The following settings are generally appropriate for MiSeq runs that are 2x150 bp. These are the recommended default parameters from the dada2 pipeline. See above for more details. |
 | <span> |
-
 
 ````{r }
 filt_out <- filterAndTrim(fwd = file.path(subF.fp, fastqFs), 
@@ -457,7 +448,6 @@ filt_out %>%
 
 # If very few reads made it through, go back and tweak your parameters.
 ````
-
 Plot the quality of the filtered fastq files.
 
 ````{r }
@@ -500,6 +490,7 @@ error rates, dada2 will infer the amplicon sequence variants (ASVs) in our data.
 These are essentially OTUs at 100% similarity. Finally, we will merge the corresponding 
 forward and reverse reads to create a list of the fully denoised sequences and 
 create a sequence table from the result.
+
 #### Housekeeping step - set up and verify the file names for the output:
 
 ````{r }
@@ -542,8 +533,6 @@ errR_plot <- plotErrors(errR, nominalQ = TRUE)
 errF_plot
 errR_plot
 ````
-
-
 
 ````{r }
 # write error objects and plots to disk
@@ -640,7 +629,6 @@ Then you can remove chimeras and assign taxonomy just on the one merged table.
 # seqtab <- mergeSequenceTables(seqtab1, seqtab2)
 ````
 
-
 ### 3. REMOVE Chimeras and ASSIGN Taxonomy
 Although dada2 has searched for indel errors and substitutions, there may still be chimeric
 sequences in our dataset (sequences that are derived from forward and reverse sequences from 
@@ -655,7 +643,6 @@ For the tutorial 16S, we will assign taxonomy with SILVA db v138.1, but you migh
   - ITS fungi (UNITE db): /db_files/dada2/sh_general_release_dynamic_25.07.2023.fasta
 
   - 18S protists (PR2 db): /db_files/dada2/pr2_version_5.0.0_SSU_dada2.fasta.gz
-
 
 ````{r }
 # Read in RDS 
@@ -797,10 +784,8 @@ write.table(tax, file = paste0(table.fp, "/tax_final.txt"),
 3. seqtab_wTax_mctoolsr.txt - a tab-delimited file with ASVs as rows, samples as columns and the final column showing the taxonomy of the ASV ID 
 4. repset.fasta - a fasta file with the representative sequence of each ASV. Fasta headers are the ASV ID and taxonomy string.  
 
-
 ### 5. Summary of reads throughout pipeline
 Here we track the reads throughout the pipeline to see if any step is resulting in a greater-than-expected loss of reads. If a step is showing a greater than expected loss of reads, it is a good idea to go back to that step and troubleshoot why reads are dropping out. The dada2 tutorial has more details about what can be changed at each step. 
-
 
 ````{r }
 getN <- function(x) sum(getUniques(x)) # function to grab sequence counts from output objects
@@ -883,8 +868,6 @@ track_plot <- track %>%
 
 track_plot
 ````
-
-
 
 ````{r }
 # Write results to disk

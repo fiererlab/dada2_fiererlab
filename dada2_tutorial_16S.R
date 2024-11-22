@@ -1,6 +1,6 @@
 # dada2 tutorial with MiSeq dataset for Fierer Lab 
 *This tutorial was created by Angela Oliverio and Hannah Holland-Moritz, and is maintained by Cliff Bueno de Mesquita and other current members of the Fierer Lab*     
-*Updated November 16th, 2024*
+*Updated November 21st, 2024*
 
 ````{r setup, include=FALSE}
 # some setup options for outputting markdown files; feel free to ignore these
@@ -30,7 +30,7 @@ We suggest opening the dada2 tutorial online to understand more about each step.
 
 1. Check to make sure you know what your target 'AMPLICON' length is. This can vary between primer sets, as well as WITHIN primer sets. For example, ITS (internal transcribed spacer) amplicons can vary from ~100 bps to 300 bps.
 
-   For examples regarding commonly used primer sets (515f/806r, Fungal ITS2, 1391f/EukBr) see protocols on the Earth Microbiome Project website: [http://press.igsb.anl.gov/earthmicrobiome/protocols-and-standards/](http://press.igsb.anl.gov/earthmicrobiome/protocols-and-standards/)
+   For examples regarding commonly used primer sets (515f/806r, Fungal ITS2, 1391f/EukBr) see protocols on the Earth Microbiome Project website: [https://earthmicrobiome.org/protocols-and-standards/](https://earthmicrobiome.org/protocols-and-standards/)
 
 2. Check to make sure you know how long your reads should be (i.e., how long should the reads be coming off the sequencer?) This is not the same as fragment length, as many times, especially with longer fragments, the entire fragment
    is not being sequenced in one direction. When long _amplicons_ are not sequenced with a _read length_ that allows for substantial overlap between the forward and reverse read, you can potentially insert biases into the data.
@@ -315,6 +315,7 @@ R1.flags <- paste("-g", FWD, "-a", REV.RC, "--minimum-length 50")
 R2.flags <- paste("-G", REV, "-A", FWD.RC, "--minimum-length 50") 
 
 # Run Cutadapt
+# Note: If you use a version later than 2.0, you can add a --cores argument to speed this up
 for (i in seq_along(fnFs)) {
     system2(cutadapt, args = c(R1.flags, R2.flags, "-n", 2, # -n 2 required to remove FWD and REV from reads
                                "-o", fnFs.cut[i], "-p", fnRs.cut[i], # output files
@@ -378,8 +379,8 @@ It's important to get a feel for the quality of the data that we are using. To d
 ````{r }
 # If the number of samples is 20 or less, plot them all, otherwise, just plot 20 randomly selected samples
 if( length(fastqFs) <= 20) {
-  plotQualityProfile(paste0(subF.fp, "/", fastqFs))
-  plotQualityProfile(paste0(subR.fp, "/", fastqRs))
+  fwd_qual_plots <- plotQualityProfile(paste0(subF.fp, "/", fastqFs))
+  rev_qual_plots <- plotQualityProfile(paste0(subR.fp, "/", fastqRs))
 } else {
   rand_samples <- sample(size = 20, 1:length(fastqFs)) # grab 20 random samples to plot
   fwd_qual_plots <- plotQualityProfile(paste0(subF.fp, "/", fastqFs[rand_samples]))
@@ -539,7 +540,7 @@ saveRDS(errR_plot, paste0(filtpathR, "/errR_plot.rds"))
 ````
 
 #### Dereplication, sequence inference, and merging of paired-end reads
-In this part of the pipeline, dada2 will make decisions about assigning sequences to ASVs (called "sequence inference"). There is a major parameter option in the core function dada() that changes how samples are handled during sequence inference. The parameter ```pool = ``` can be set to: ```pool = FALSE``` (default), ```pool = TRUE```, or ```pool = psuedo```. For details on parameter choice, please see below, and further information on this blogpost [http://fiererlab.org/2020/02/17/whats-in-a-number-estimating-microbial-richness-using-dada2/](http://fiererlab.org/2020/02/17/whats-in-a-number-estimating-microbial-richness-using-dada2/), and explanation on the dada2 tutorial [https://benjjneb.github.io/dada2/pool.html](https://benjjneb.github.io/dada2/pool.html). Note that some amplicons like ITS have variable read lengths which in some cases means that reads may not overlap and cannot be merged. In such cases you may want to opt to just use the forward or reverse reads rather than merged reads. For more information see [https://benjjneb.github.io/dada2/ITS_workflow.html](https://benjjneb.github.io/dada2/ITS_workflow.html).
+In this part of the pipeline, dada2 will make decisions about assigning sequences to ASVs (called "sequence inference"). There is a major parameter option in the core function dada() that changes how samples are handled during sequence inference. The parameter ```pool = ``` can be set to: ```pool = FALSE``` (default), ```pool = TRUE```, or ```pool = psuedo```. For details on parameter choice, please see below, and further information on this blogpost [https://www.fiererlab.org/blog/archive-whats-in-a-number-estimating-microbial-richness-using-dada2](https://www.fiererlab.org/blog/archive-whats-in-a-number-estimating-microbial-richness-using-dada2), and explanation on the dada2 tutorial [https://benjjneb.github.io/dada2/pool.html](https://benjjneb.github.io/dada2/pool.html). Note that some amplicons like ITS have variable read lengths which in some cases means that reads may not overlap and cannot be merged. In such cases you may want to opt to just use the forward or reverse reads rather than merged reads. For more information see [https://benjjneb.github.io/dada2/ITS_workflow.html](https://benjjneb.github.io/dada2/ITS_workflow.html).
 
 **Details**   
 ```pool = FALSE```: Sequence information is not shared between samples. Fast processing time, less sensitivity to rare taxa.   
@@ -630,9 +631,11 @@ Although dada2 has searched for indel errors and substitutions, there may still 
 sequences in our dataset (sequences that are derived from forward and reverse sequences from 
 two different organisms becoming fused together during PCR and/or sequencing). To identify 
 chimeras, we will search for rare sequence variants that can be reconstructed by combining
-left-hand and right-hand segments from two more abundant "parent" sequences. After removing chimeras, we will use a taxonomy database to train a naive Bayesian classifier-algorithm to assign names to our sequence variants.
+left-hand and right-hand segments from two more abundant "parent" sequences. After removing 
+chimeras, we will use a taxonomy database to train a naive Bayesian classifier-algorithm to 
+assign names to our sequence variants.
 
-For the tutorial 16S, we will assign taxonomy with SILVA db v138.1, but you might want to use other databases for your data. This one includes species but be wary of species level assignments. It's always a good idea to BLAST your top ASVs of interest to confirm the taxonomy. Other options for 16S include Greengenes, GTDB, and RDP. Below are paths to some of the databases we use often. If you want to use SILVA for 18S instead of PR2, make sure you use the one that is suitable for 18S, which is different than the 16S one and is from release 132. Databases are periodically updated so make sure you check for new releases and use the latest versions. (If you are on your own computer you can download the database you need from this link [https://benjjneb.github.io/dada2/training.html](https://benjjneb.github.io/dada2/training.html):)
+For the tutorial 16S, we will assign taxonomy with SILVA db v138.1, but you might want to use other databases for your data. We also include a second step to add species assignment based on exact matching. Be wary of species assignments with short amplicons. It's always a good idea to BLAST your top ASVs of interest to confirm the taxonomy. Other options for 16S include Greengenes, GTDB, and RDP. Below are paths to some of the databases we use often. If you want to use SILVA for 18S instead of PR2, make sure you use the one that is suitable for 18S, which is different than the 16S one and is from release 132. Databases are periodically updated so make sure you check for new releases and use the latest versions. (If you are on your own computer you can download the database you need from this link [https://benjjneb.github.io/dada2/training.html](https://benjjneb.github.io/dada2/training.html):)
 
   - 16S bacteria and archaea (SILVA db): /db_files/dada2/silva_nr99_v138.1_train_set.fa
 

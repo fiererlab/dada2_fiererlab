@@ -4,7 +4,7 @@
 *This tutorial was created by Angela Oliverio and Hannah Holland-Moritz,
 and is maintained by Cliff Bueno de Mesquita and other current members
 of the Fierer Lab*  
-*Updated November 16th, 2024*
+*Updated November 21st, 2024*
 
 This pipeline runs the dada2 workflow for Big Data (paired-end) from
 RStudio on the microbe server.
@@ -27,8 +27,7 @@ found here: <https://benjjneb.github.io/dada2/bigdata_paired.html>
 
     For examples regarding commonly used primer sets (515f/806r, Fungal
     ITS2, 1391f/EukBr) see protocols on the Earth Microbiome Project
-    website:
-    <http://press.igsb.anl.gov/earthmicrobiome/protocols-and-standards/>
+    website: <https://earthmicrobiome.org/protocols-and-standards/>
 
 2.  Check to make sure you know how long your reads should be (i.e., how
     long should the reads be coming off the sequencer?) This is not the
@@ -479,6 +478,7 @@ R1.flags <- paste("-g", FWD, "-a", REV.RC, "--minimum-length 50")
 R2.flags <- paste("-G", REV, "-A", FWD.RC, "--minimum-length 50") 
 
 # Run Cutadapt
+# Note: If you use a version later than 2.0, you can add a --cores argument to speed this up
 for (i in seq_along(fnFs)) {
     system2(cutadapt, args = c(R1.flags, R2.flags, "-n", 2, # -n 2 required to remove FWD and REV from reads
                                "-o", fnFs.cut[i], "-p", fnRs.cut[i], # output files
@@ -583,8 +583,8 @@ line).
 ``` r
 # If the number of samples is 20 or less, plot them all, otherwise, just plot 20 randomly selected samples
 if( length(fastqFs) <= 20) {
-  plotQualityProfile(paste0(subF.fp, "/", fastqFs))
-  plotQualityProfile(paste0(subR.fp, "/", fastqRs))
+  fwd_qual_plots <- plotQualityProfile(paste0(subF.fp, "/", fastqFs))
+  rev_qual_plots <- plotQualityProfile(paste0(subR.fp, "/", fastqRs))
 } else {
   rand_samples <- sample(size = 20, 1:length(fastqFs)) # grab 20 random samples to plot
   fwd_qual_plots <- plotQualityProfile(paste0(subF.fp, "/", fastqFs[rand_samples]))
@@ -818,7 +818,7 @@ are handled during sequence inference. The parameter `pool =` can be set
 to: `pool = FALSE` (default), `pool = TRUE`, or `pool = psuedo`. For
 details on parameter choice, please see below, and further information
 on this blogpost
-<http://fiererlab.org/2020/02/17/whats-in-a-number-estimating-microbial-richness-using-dada2/>,
+<https://www.fiererlab.org/blog/archive-whats-in-a-number-estimating-microbial-richness-using-dada2>,
 and explanation on the dada2 tutorial
 <https://benjjneb.github.io/dada2/pool.html>. Note that some amplicons
 like ITS have variable read lengths which in some cases means that reads
@@ -1014,16 +1014,17 @@ taxonomy database to train a naive Bayesian classifier-algorithm to
 assign names to our sequence variants.
 
 For the tutorial 16S, we will assign taxonomy with SILVA db v138.1, but
-you might want to use other databases for your data. This one includes
-species but be wary of species level assignments. It’s always a good
-idea to BLAST your top ASVs of interest to confirm the taxonomy. Other
-options for 16S include Greengenes, GTDB, and RDP. Below are paths to
-some of the databases we use often. If you want to use SILVA for 18S
-instead of PR2, make sure you use the one that is suitable for 18S,
-which is different than the 16S one and is from release 132. Databases
-are periodically updated so make sure you check for new releases and use
-the latest versions. (If you are on your own computer you can download
-the database you need from this link
+you might want to use other databases for your data. We also include a
+second step to add species assignment based on exact matching. Be wary
+of species assignments with short amplicons. It’s always a good idea to
+BLAST your top ASVs of interest to confirm the taxonomy. Other options
+for 16S include Greengenes, GTDB, and RDP. Below are paths to some of
+the databases we use often. If you want to use SILVA for 18S instead of
+PR2, make sure you use the one that is suitable for 18S, which is
+different than the 16S one and is from release 132. Databases are
+periodically updated so make sure you check for new releases and use the
+latest versions. (If you are on your own computer you can download the
+database you need from this link
 <https://benjjneb.github.io/dada2/training.html>:)
 
 - 16S bacteria and archaea (SILVA db):
